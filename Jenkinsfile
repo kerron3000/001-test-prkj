@@ -50,7 +50,7 @@ pipeline {
             }
         }
 
-        stage('Run Streamlit AppTest Suite') {
+        stage('Run Streamlit AppTest Suite 0') {
             steps {
                 bat '''
                     call %VENV_DIR%\\Scripts\\activate.bat
