@@ -1,7 +1,7 @@
 from streamlit.testing.v1 import AppTest
 
 
-APP_PATH = "bug_tracker_app.py"
+APP_PATH = "tests/test-defect-tracker.py"
 
 
 def test_app_runs_without_exception():
