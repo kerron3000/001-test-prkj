@@ -8,9 +8,8 @@ pipeline {
     }
 
     environment {
-        PYTHON          = 'python3'
-        VENV_DIR        = '.venv'
-        TEST_RESULTS_DIR = 'test-results'
+        VENV_DIR          = '.venv'
+        TEST_RESULTS_DIR  = 'test-results'
     }
 
     stages {
@@ -21,40 +20,46 @@ pipeline {
             }
         }
 
+        stage('Verify Python') {
+            steps {
+                bat 'python --version'
+            }
+        }
+
         stage('Set Up Python Environment') {
             steps {
-                sh '''
-                    ${PYTHON} -m venv ${VENV_DIR}
-                    . ${VENV_DIR}/bin/activate
-                    pip install --upgrade pip
+                bat '''
+                    python -m venv %VENV_DIR%
+                    call %VENV_DIR%\\Scripts\\activate.bat
+                    python -m pip install --upgrade pip
                 '''
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                    . ${VENV_DIR}/bin/activate
-                    if [ -f requirements.txt ]; then
+                bat '''
+                    call %VENV_DIR%\\Scripts\\activate.bat
+                    if exist requirements.txt (
                         pip install -r requirements.txt
-                    else
+                    ) else (
                         pip install streamlit pandas
-                    fi
+                    )
                     pip install pytest pytest-cov
                 '''
             }
         }
 
-        stage('Run Streamlit AppTest Suite') {
+        stage('Run Streamlit AppTest Suite 2') {
             steps {
-                sh '''
-                    . ${VENV_DIR}/bin/activate
-                    mkdir -p ${TEST_RESULTS_DIR}
-                    pytest tests/ \
-                        --junitxml=${TEST_RESULTS_DIR}/apptest-results.xml \
-                        --cov=. \
-                        --cov-report=xml:${TEST_RESULTS_DIR}/coverage.xml \
-                        --cov-report=term \
+                bat '''
+                    call %VENV_DIR%\\Scripts\\activate.bat
+                    if not exist %TEST_RESULTS_DIR% mkdir %TEST_RESULTS_DIR%
+                    pytest tests/ ^
+                        --junitxml=%TEST_RESULTS_DIR%\\apptest-results.xml ^
+                        --cov=. ^
+                        --cov-report=xml:%TEST_RESULTS_DIR%\\coverage.xml ^
+                        --cov-report=term ^
                         -v
                 '''
             }
@@ -63,17 +68,17 @@ pipeline {
 
     post {
         always {
-            junit allowEmptyResults: true, testResults: "${TEST_RESULTS_DIR}/apptest-results.xml"
-            archiveArtifacts artifacts: "${TEST_RESULTS_DIR}/**", allowEmptyArchive: true
+            junit allowEmptyResults: true, testResults: "${TEST_RESULTS_DIR}\\apptest-results.xml"
+            archiveArtifacts artifacts: "${TEST_RESULTS_DIR}\\**", allowEmptyArchive: true
         }
         success {
-            echo '✅ AppTest suite passed.'
+            echo 'AppTest suite passed.'
         }
         failure {
-            echo '❌ AppTest suite failed — check the JUnit report for details.'
+            echo 'AppTest suite failed - check the JUnit report for details.'
         }
         cleanup {
-            sh 'rm -rf ${VENV_DIR}'
+            bat 'rmdir /S /Q %VENV_DIR% 2>nul || exit 0'
         }
     }
 }
