@@ -1,7 +1,7 @@
 from streamlit.testing.v1 import AppTest
 
 
-APP_PATH = "C:\\Users\\kerro\\OneDrive\\Documents\\001-test-prjk\\defect-tracker.py"
+APP_PATH = "defect-tracker.py"
 
 
 def test_app_runs_without_exception():
