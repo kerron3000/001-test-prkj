@@ -45,18 +45,19 @@ pipeline {
                     ) else (
                         pip install streamlit pandas
                     )
-                    pip install pytest pytest-cov
+                    pip install pytest pytest-cov pytest-html
                 '''
             }
         }
 
-        stage('Run Streamlit AppTest Suite 0') {
+        stage('Run Streamlit AppTest Suite') {
             steps {
                 bat '''
                     call %VENV_DIR%\\Scripts\\activate.bat
                     if not exist %TEST_RESULTS_DIR% mkdir %TEST_RESULTS_DIR%
                     pytest tests/ ^
                         --junitxml=%TEST_RESULTS_DIR%\\apptest-results.xml ^
+                        --html=%TEST_RESULTS_DIR%\\apptest-report.html --self-contained-html ^
                         --cov=. ^
                         --cov-report=xml:%TEST_RESULTS_DIR%\\coverage.xml ^
                         --cov-report=term ^
@@ -70,6 +71,14 @@ pipeline {
         always {
             junit allowEmptyResults: true, testResults: "${TEST_RESULTS_DIR}\\apptest-results.xml"
             archiveArtifacts artifacts: "${TEST_RESULTS_DIR}\\**", allowEmptyArchive: true
+            publishHTML(target: [
+                allowMissing: true,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: "${TEST_RESULTS_DIR}",
+                reportFiles: 'apptest-report.html',
+                reportName: 'AppTest HTML Report'
+            ])
         }
         success {
             echo 'AppTest suite passed.'
